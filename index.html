@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bento3D - Global Interactive Mockup Canvas</title>
+    <!-- Tailwind CSS for Ultra Premium Dark UI -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- html2canvas for browser-side image downloading -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .bento-grid-preview {
+            perspective: 1000px;
+        }
+        .perspective-container {
+            transform-style: preserve-3d;
+            transition: transform 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-[#0b0f19] text-gray-100 min-h-screen flex flex-col font-sans">
+
+    <!-- Header -->
+    <header class="border-b border-gray-800/60 px-6 py-4 flex justify-between items-center bg-[#0d1321]">
+        <div class="flex items-center gap-3">
+            <div class="bg-gradient-to-tr from-indigo-500 to-purple-500 p-2 rounded-xl shadow-lg shadow-indigo-500/20">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z"></path></svg>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">Bento3D</h1>
+                <p class="text-xs text-gray-500">v1.0 (Global Client-Side)</p>
+            </div>
+        </div>
+        <button id="downloadBtn" class="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-lg shadow-indigo-500/20 transition-all flex items-center gap-2 cursor-pointer">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            Export High-Res PNG
+        </button>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="flex-1 grid grid-cols-1 lg:grid-cols-4 overflow-hidden">
+        
+        <!-- Sidebar Controls -->
+        <div class="lg:col-span-1 bg-[#0d1321] border-r border-gray-800/60 p-6 flex flex-col gap-6 overflow-y-auto">
+            <div>
+                <h2 class="text-sm font-semibold uppercase tracking-wider text-gray-400 mb-4">Canvas Styles</h2>
+                
+                <!-- Background Gradient Control -->
+                <div class="mb-5">
+                    <label class="text-xs text-gray-400 block mb-2">Canvas Background Theme</label>
+                    <div class="grid grid-cols-4 gap-2">
+                        <button onclick="setBg('from-slate-900 to-slate-800')" class="h-8 rounded-lg bg-gradient-to-br from-slate-900 to-slate-800 border border-gray-700 cursor-pointer"></button>
+                        <button onclick="setBg('from-indigo-950 via-purple-900 to-slate-950')" class="h-8 rounded-lg bg-gradient-to-br from-indigo-950 via-purple-900 to-slate-950 border border-gray-700 cursor-pointer"></button>
+                        <button onclick="setBg('from-fuchsia-950 via-rose-950 to-slate-950')" class="h-8 rounded-lg bg-gradient-to-br from-fuchsia-950 via-rose-950 to-slate-950 border border-gray-700 cursor-pointer"></button>
+                        <button onclick="setBg('from-cyan-950 via-blue-900 to-slate-950')" class="h-8 rounded-lg bg-gradient-to-br from-cyan-950 via-blue-900 to-slate-950 border border-gray-700 cursor-pointer"></button>
+                    </div>
+                </div>
+
+                <!-- 3D Rotation Controls -->
+                <div class="mb-5">
+                    <label class="text-xs text-gray-400 flex justify-between mb-2">
+                        <span>3D Perspective Tilt (X-Axis)</span>
+                        <span id="valX">15°</span>
+                    </label>
+                    <input type="range" id="tiltX" min="-30" max="30" value="15" class="w-full accent-indigo-500">
+                </div>
+
+                <div class="mb-5">
+                    <label class="text-xs text-gray-400 flex justify-between mb-2">
+                        <span>3D Perspective Rotation (Y-Axis)</span>
+                        <span id="valY">-15°</span>
+                    </label>
+                    <input type="range" id="tiltY" min="-30" max="30" value="-15" class="w-full accent-indigo-500">
+                </div>
+
+                <!-- Bento Gap Control -->
+                <div class="mb-5">
+                    <label class="text-xs text-gray-400 flex justify-between mb-2">
+                        <span>Grid Box Spacing</span>
+                        <span id="valGap">16px</span>
+                    </label>
+                    <input type="range" id="gridGap" min="8" max="32" value="16" class="w-full accent-indigo-500">
+                </div>
+            </div>
+
+            <div class="mt-auto border-t border-gray-800 pt-4">
+                <p class="text-xs text-gray-500 text-center leading-relaxed">
+                    Drop your screenshots/images into any grid card. The 3D rendering engine runs 100% locally.
+                </p>
+            </div>
+        </div>
+
+        <!-- Canvas Area -->
+        <div class="lg:col-span-3 bg-[#080b11] p-8 flex items-center justify-center overflow-auto">
+            <!-- This container will be captured by html2canvas -->
+            <div id="captureCanvas" class="w-full max-w-4xl aspect-[16/10] bg-gradient-to-br from-indigo-950 via-purple-900 to-slate-950 rounded-2xl p-12 flex items-center justify-center shadow-2xl bento-grid-preview transition-all duration-300">
+                
+                <!-- 3D Perspective Container -->
+                <div id="bentoContainer" class="perspective-container grid grid-cols-3 grid-rows-2 gap-4 w-full h-full" style="transform: rotateX(15deg) rotateY(-15deg);">
+                    
+                    <!-- Box 1 (Large - Span 2 Columns) -->
+                    <div class="glass-card rounded-2xl col-span-2 row-span-1 p-4 flex flex-col justify-center items-center relative overflow-hidden group cursor-pointer border border-white/10 shadow-lg" ondragover="event.preventDefault()" ondrop="handleDrop(event, this)">
+                        <input type="file" class="hidden" accept="image/*" onchange="handleFile(this)">
+                        <div class="text-center pointer-events-none group-hover:scale-105 transition-transform">
+                            <svg class="w-8 h-8 mx-auto text-indigo-400/80 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            <span class="text-xs text-gray-400 font-medium block">Drop Main App/Web Screenshot</span>
+                        </div>
+                    </div>
+
+                    <!-- Box 2 (Small) -->
+                    <div class="glass-card rounded-2xl col-span-1 row-span-1 p-4 flex flex-col justify-center items-center relative overflow-hidden group cursor-pointer border border-white/10 shadow-lg" ondragover="event.preventDefault()" ondrop="handleDrop(event, this)">
+                        <input type="file" class="hidden" accept="image/*" onchange="handleFile(this)">
+                        <div class="text-center pointer-events-none group-hover:scale-105 transition-transform">
+                            <svg class="w-6 h-6 mx-auto text-purple-400/80 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                            <span class="text-xs text-gray-400 font-medium block">Drop Mobile UI</span>
+                        </div>
+                    </div>
+
+                    <!-- Box 3 (Small) -->
+                    <div class="glass-card rounded-2xl col-span-1 row-span-1 p-4 flex flex-col justify-center items-center relative overflow-hidden group cursor-pointer border border-white/10 shadow-lg" ondragover="event.preventDefault()" ondrop="handleDrop(event, this)">
+                        <input type="file" class="hidden" accept="image/*" onchange="handleFile(this)">
+                        <div class="text-center pointer-events-none group-hover:scale-105 transition-transform">
+                            <svg class="w-6 h-6 mx-auto text-rose-400/80 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                            <span class="text-xs text-gray-400 font-medium block">Drop Code/Features</span>
+                        </div>
+                    </div>
+
+                    <!-- Box 4 (Large - Span 2 Columns) -->
+                    <div class="glass-card rounded-2xl col-span-2 row-span-1 p-4 flex flex-col justify-center items-center relative overflow-hidden group cursor-pointer border border-white/10 shadow-lg" ondragover="event.preventDefault()" ondrop="handleDrop(event, this)">
+                        <input type="file" class="hidden" accept="image/*" onchange="handleFile(this)">
+                        <div class="text-center pointer-events-none group-hover:scale-105 transition-transform">
+                            <svg class="w-8 h-8 mx-auto text-cyan-400/80 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                            <span class="text-xs text-gray-400 font-medium block">Drop Analytics / Metric Chart</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- JavaScript Logic for Live Manipulation -->
+    <script>
+        const bentoContainer = document.getElementById('bentoContainer');
+        const tiltXInput = document.getElementById('tiltX');
+        const tiltYInput = document.getElementById('tiltY');
+        const gridGapInput = document.getElementById('gridGap');
+        const captureCanvas = document.getElementById('captureCanvas');
+
+        // Update 3D Perspective Angles Instantly
+        function update3DTransform() {
+            const x = tiltXInput.value;
+            const y = tiltYInput.value;
+            bentoContainer.style.transform = `rotateX(${x}deg) rotateY(${y}deg)`;
+            document.getElementById('valX').innerText = `${x}°`;
+            document.getElementById('valY').innerText = `${y}°`;
+        }
+
+        tiltXInput.addEventListener('input', update3DTransform);
+        tiltYInput.addEventListener('input', update3DTransform);
+
+        // Update Bento Box Gaps
+        gridGapInput.addEventListener('input', () => {
+            const gap = gridGapInput.value;
+            bentoContainer.style.gap = `${gap}px`;
+            document.getElementById('valGap').innerText = `${gap}px`;
+        });
+
+        // Set Dynamic Canvas Theme Backgrounds
+        function setBg(gradientClasses) {
+            captureCanvas.className = `w-full max-w-4xl aspect-[16/10] bg-gradient-to-br ${gradientClasses} rounded-2xl p-12 flex items-center justify-center shadow-2xl bento-grid-preview transition-all duration-300`;
+        }
+
+        // Trigger hidden file picker on click
+        document.querySelectorAll('.glass-card').forEach(card => {
+            card.addEventListener('click', () => {
+                card.querySelector('input[type="file"]').click();
+            });
+        });
+
+        // Handle Image Files via Input Selection
+        function handleFile(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    displayImage(input.parentElement, e.target.result);
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Handle Drag & Drop Images Locally
+        function handleDrop(e, element) {
+            e.preventDefault();
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    displayImage(element, event.target.result);
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Render Image onto the Bento Card with 3D Pop/Glass Look
+        function displayImage(card, imageSrc) {
+            card.innerHTML = `
+                <input type="file" class="hidden" accept="image/*" onchange="handleFile(this)">
+                <img src="${imageSrc}" class="w-full h-full object-cover rounded-xl shadow-md border border-white/10 transform transition duration-500 hover:scale-[1.02]">
+            `;
+        }
+
+        // Export High-Resolution PNG directly inside the Browser
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            const btn = document.getElementById('downloadBtn');
+            btn.innerText = "Processing...";
+            btn.disabled = true;
+
+            html2canvas(captureCanvas, {
+                useCORS: true,
+                scale: 2, // High resolution enhancer
+                backgroundColor: null
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'bento3d_mockup.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                
+                btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> Export High-Res PNG`;
+                btn.disabled = false;
+            }).catch(err => {
+                console.error(err);
+                btn.innerText = "Export Failed";
+                btn.disabled = false;
+            });
+        });
+    </script>
+</body>
+</html>
